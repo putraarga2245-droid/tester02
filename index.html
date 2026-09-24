@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Tes MongoDB Vercel</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 400px; margin: 20px auto; padding: 20px; background: #f4f4f9; }
+        .card { background: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        input, button { width: 100%; padding: 10px; margin: 5px 0 12px 0; box-sizing: border-box; }
+        button { background: #0070f3; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0051a2; }
+        pre { background: #eee; padding: 10px; font-size: 12px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+
+    <h2>Aplikasi Tes Sederhana</h2>
+
+    <!-- Kotak Register / Buat Akun -->
+    <div class="card">
+        <h3>1. Buat Akun (Register)</h3>
+        <input type="email" id="regEmail" placeholder="Masukkan Email...">
+        <input type="password" id="regPass" placeholder="Masukkan Password...">
+        <button onclick="registerUser()">Daftar</button>
+    </div>
+
+    <!-- Kotak Login -->
+    <div class="card">
+        <h3>2. Login</h3>
+        <input type="email" id="logEmail" placeholder="Email terdaftar...">
+        <input type="password" id="logPass" placeholder="Password...">
+        <button onclick="loginUser()">Masuk</button>
+        <p id="statusLogin" style="font-weight: bold; color: green;"></p>
+    </div>
+
+    <!-- Kotak Simpan Data -->
+    <div class="card">
+        <h3>3. Simpan Data</h3>
+        <input type="text" id="isiData" placeholder="Tulis sesuatu untuk disimpan...">
+        <button onclick="simpanData()">Kirim Data</button>
+    </div>
+
+    <!-- Kotak Ambil Data -->
+    <div class="card">
+        <h3>4. Data Saya</h3>
+        <button onclick="ambilData()">Muat Data Saya</button>
+        <pre id="hasilData">Belum ada data...</pre>
+    </div>
+
+<script>
+    // Simpan email yang sedang login secara sementara di HP/Browser
+    let currentUser = "";
+
+    async function registerUser() {
+        const email = document.getElementById('regEmail').value;
+        const password = document.getElementById('regPass').value;
+
+        const res = await fetch('/api/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        alert(data.pesan);
+    }
+
+    async function loginUser() {
+        const email = document.getElementById('logEmail').value;
+        const password = document.getElementById('logPass').value;
+
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        
+        if(data.status === "OK") {
+            currentUser = data.email;
+            document.getElementById('statusLogin').innerText = "Login sebagai: " + currentUser;
+            alert("Login Berhasil!");
+        } else {
+            alert(data.pesan);
+        }
+    }
+
+    async function simpanData() {
+        if (!currentUser) {
+            alert("Harap login terlebih dahulu di bagian atas!");
+            return;
+        }
+        const isiData = document.getElementById('isiData').value;
+
+        const res = await fetch('/api/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ emailPemilik: currentUser, isiData })
+        });
+        const data = await res.json();
+        alert(data.pesan);
+        document.getElementById('isiData').value = "";
+    }
+
+    async function ambilData() {
+        if (!currentUser) {
+            alert("Harap login terlebih dahulu!");
+            return;
+        }
+
+        const res = await fetch('/api/data/' + currentUser);
+        const data = await res.json();
+        document.getElementById('hasilData').innerText = JSON.stringify(data, null, 2);
+    }
+</script>
+
+</body>
+</html>
